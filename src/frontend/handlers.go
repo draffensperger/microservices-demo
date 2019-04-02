@@ -74,6 +74,7 @@ func (fe *frontendServer) homeHandler(w http.ResponseWriter, r *http.Request) {
 
 	if err := templates.ExecuteTemplate(w, "home", map[string]interface{}{
 		"session_id":    sessionID(r),
+		"traceparent":   r.Header.Get("traceparent"),
 		"request_id":    r.Context().Value(ctxKeyRequestID{}),
 		"user_currency": currentCurrency(r),
 		"currencies":    currencies,
@@ -132,6 +133,7 @@ func (fe *frontendServer) productHandler(w http.ResponseWriter, r *http.Request)
 
 	if err := templates.ExecuteTemplate(w, "product", map[string]interface{}{
 		"session_id":      sessionID(r),
+		"traceparent":     r.Header.Get("traceparent"),
 		"request_id":      r.Context().Value(ctxKeyRequestID{}),
 		"ad":              fe.chooseAd(r.Context(), p.Categories, log),
 		"user_currency":   currentCurrency(r),
@@ -237,6 +239,7 @@ func (fe *frontendServer) viewCartHandler(w http.ResponseWriter, r *http.Request
 	year := time.Now().Year()
 	if err := templates.ExecuteTemplate(w, "cart", map[string]interface{}{
 		"session_id":       sessionID(r),
+		"traceparent":      r.Header.Get("traceparent"),
 		"request_id":       r.Context().Value(ctxKeyRequestID{}),
 		"user_currency":    currentCurrency(r),
 		"currencies":       currencies,
@@ -301,6 +304,7 @@ func (fe *frontendServer) placeOrderHandler(w http.ResponseWriter, r *http.Reque
 
 	if err := templates.ExecuteTemplate(w, "order", map[string]interface{}{
 		"session_id":      sessionID(r),
+		"traceparent":     r.Header.Get("traceparent"),
 		"request_id":      r.Context().Value(ctxKeyRequestID{}),
 		"user_currency":   currentCurrency(r),
 		"order":           order.GetOrder(),
@@ -362,6 +366,7 @@ func renderHTTPError(log logrus.FieldLogger, r *http.Request, w http.ResponseWri
 	w.WriteHeader(code)
 	templates.ExecuteTemplate(w, "error", map[string]interface{}{
 		"session_id":  sessionID(r),
+		"traceparent": r.Header.Get("traceparent"),
 		"request_id":  r.Context().Value(ctxKeyRequestID{}),
 		"error":       errMsg,
 		"status_code": code,

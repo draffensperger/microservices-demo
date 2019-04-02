@@ -138,7 +138,7 @@ func main() {
 	handler = &ochttp.Handler{                     // add opencensus instrumentation
 		Handler:     handler,
 		Propagation: &b3.HTTPFormat{}}
-
+	handler = ensureParentSpanID(handler) // add parent span header if missing
 	log.Infof("starting server on " + addr + ":" + srvPort)
 	log.Fatal(http.ListenAndServe(addr+":"+srvPort, handler))
 }

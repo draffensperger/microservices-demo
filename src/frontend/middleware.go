@@ -16,6 +16,9 @@ package main
 
 import (
 	"context"
+	"encoding/hex"
+	"fmt"
+	"math/rand"
 	"net/http"
 	"time"
 
@@ -102,4 +105,33 @@ func ensureSessionID(next http.Handler) http.HandlerFunc {
 		r = r.WithContext(ctx)
 		next.ServeHTTP(w, r)
 	}
+}
+
+var src = rand.New(rand.NewSource(time.Now().UnixNano()))
+
+func ensureParentSpanID(next http.Handler) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Header.Get("X-B3-TraceId") == "" {
+			traceID := randStringBytesMaskImprSrc(32)
+			spanID := randStringBytesMaskImprSrc(16)
+			r.Header.Add("X-B3-TraceId", traceID)
+			r.Header.Add("X-B3-SpanId", spanID)
+			r.Header.Add("X-B3-Sampled", "1")
+			traceParent := fmt.Sprintf("00-%s-%s-01", traceID, spanID)
+			r.Header.Add("traceparent", traceParent)
+		}
+		next.ServeHTTP(w, r)
+	}
+}
+
+// randStringBytesMaskImprSrc returns a random hexadecimal string of length n.
+// https://stackoverflow.com/questions/46904588/efficient-way-to-to-generate-a-random-hex-string-of-a-fixed-length-in-golang
+func randStringBytesMaskImprSrc(n int) string {
+	b := make([]byte, (n+1)/2) // can be simplified to n/2 if n is always even
+
+	if _, err := src.Read(b); err != nil {
+		panic(err)
+	}
+
+	return hex.EncodeToString(b)[:n]
 }
